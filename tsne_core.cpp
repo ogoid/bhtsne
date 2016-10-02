@@ -386,6 +386,7 @@ T TSNE<T, OUTDIM>::evaluateError(unsigned int* row_P, unsigned int* col_P, T* va
     }
 
     // Clean up memory
+    delete tree;
     return C;
 }
 
