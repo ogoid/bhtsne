@@ -477,8 +477,6 @@ void TSNE<T, OUTDIM>::computeGaussianPerplexity(T* X, int N, int D, unsigned int
     unsigned int* row_P = *_row_P;
     unsigned int* col_P = *_col_P;
     T* val_P = *_val_P;
-    T* cur_P = (T*) malloc((N - 1) * sizeof(T));
-    if(cur_P == NULL) { printf("Memory allocation failed!\n"); exit(1); }
     row_P[0] = 0;
     for(int n = 0; n < N; n++) row_P[n + 1] = row_P[n] + (unsigned int) K;
 
@@ -492,8 +490,15 @@ void TSNE<T, OUTDIM>::computeGaussianPerplexity(T* X, int N, int D, unsigned int
     if (verbose) {
         printf("Building tree...\n");
     }
+    
+#pragma omp parallel
+{
+    T* cur_P = (T*) malloc((N - 1) * sizeof(T));
+    if(cur_P == NULL) { printf("Memory allocation failed!\n"); exit(1); }
     vector<DataPoint<T> > indices;
     vector<T> distances;
+    
+#pragma omp for
     for(int n = 0; n < N; n++) {
 
         if (verbose) {
@@ -559,10 +564,10 @@ void TSNE<T, OUTDIM>::computeGaussianPerplexity(T* X, int N, int D, unsigned int
             val_P[row_P[n] + m] = cur_P[m];
         }
     }
-
     // Clean up memory
-    obj_X.clear();
     free(cur_P);
+}
+    obj_X.clear();
     delete tree;
 }
 
